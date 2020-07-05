@@ -172,12 +172,12 @@ class Ui_write(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"자기소개서 작성 보조 by HYS", None))
-        self.lbNo3.setText(QCoreApplication.translate("MainWindow", u"3번: 학교 생활 중 배려, 나눔, 협력, 갈등 관리 등을\n실천한 사례를 들고, 그 과정을 통해 배우고 느낀점", None))
+        self.lbNo3.setText(QCoreApplication.translate("MainWindow", u"3번: 학교 생활 중 배려, 나눔, 협력, 갈등 관리 등을\n실천한 사례를 들고, 그 과정을 통해 배우고 느낀점을 중심으로 기술", None))
         self.lbCount1.setText("")
         self.lbTitleNum.setText(QCoreApplication.translate("MainWindow", u"\ubc88\ud638", None))
         self.lbTitleCount.setText(QCoreApplication.translate("MainWindow", u"\uae00\uc790\uc218", None))
-        self.lbNo2.setText(QCoreApplication.translate("MainWindow", u"2번: 고등학교 재학기간 중 본인이 의미를 두고 노력했던\n교내 활동(3개 이내)을 통해 배우고 느낀점", None))
-        self.lbNo1.setText(QCoreApplication.translate("MainWindow", u"1번: 고등학교 재학기간 중 학업에 기울인\n노력과 학습 경험을 통해, 배우고 느낀점", None))
+        self.lbNo2.setText(QCoreApplication.translate("MainWindow", u"2번: 고등학교 재학기간 중 본인이 의미를 두고 노력했던\n교내 활동(3개 이내)을 통해 배우고 느낀점을 중심으로 기술", None))
+        self.lbNo1.setText(QCoreApplication.translate("MainWindow", u"1번: 고등학교 재학기간 중 학업에 기울인\n노력과 학습 경험을 통해, 배우고 느낀점을 중심으로 기술", None))
         self.lbCount2.setText("")
         self.lbCount3.setText("")
         self.lbTitleContent.setText(QCoreApplication.translate("MainWindow", u"\ub0b4\uc6a9", None))

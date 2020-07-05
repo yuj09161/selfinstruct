@@ -7,12 +7,13 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
 from PySide2.QtWidgets import *
 import writeUI
 
-import os,sys,json
+import os,sys,json,datetime
 
+HISTORY=True
 
 CURRENT_PATH=os.path.dirname(os.path.abspath('__file__'))+'\\'
 LENGTH=['1000','1500','1000']
-path=CURRENT_PATH+'last.selfintro'
+path=CURRENT_PATH+'last.selfinstruct'
 data={'1':'', '2':'', '3':'', 'auto_save':[True,1]}
 
 
@@ -56,7 +57,7 @@ class Write(QMainWindow,writeUI.Ui_write):
                     break
         
         self.__tmr=QTimer()
-        self.__tmr.timeout.connect(self.__save)
+        self.__tmr.timeout.connect(lambda: self.__save(do_history=False))
         if self.chkAutoSave.isChecked():
             self.__tmr.setInterval(self.spTime.value()*1000*60)
             self.__tmr.start()
@@ -103,13 +104,11 @@ class Write(QMainWindow,writeUI.Ui_write):
             raise ValueError
     
     def __auto_save(self,arg):
-        print('autosave ;',arg,';',type(arg))
         if type(arg) is int:
-            print(arg)
             self.__tmr.stop()
             self.__tmr.setInterval(arg*1000*60)
             self.__tmr.start()
-            self.__save()
+            self.__save(do_history=False)
         elif type(arg) is bool:
             self.spTime.setEnabled(arg)
             if arg:
@@ -117,14 +116,14 @@ class Write(QMainWindow,writeUI.Ui_write):
                 self.__tmr.start()
             else:
                 self.__tmr.stop()
-            self.__save()
+            self.__save(do_history=False)
         else:
             raise ValueError
     
     def __load_as(self):
         global path
         oldpath=path
-        path,_=QFileDialog.getOpenFileName(self,'불러오기',CURRENT_PATH,'자기소개서 파일 (*.selfintro)','자기소개서 파일 (*.selfintro)')
+        path,_=QFileDialog.getOpenFileName(self,'불러오기',CURRENT_PATH,'자기소개서 파일 (*.selfinstruct)','자기소개서 파일 (*.selfinstruct)')
         if path:
             try:
                 data=load_data(path)
@@ -147,14 +146,20 @@ class Write(QMainWindow,writeUI.Ui_write):
     def __save_as(self):
         global path
         oldpath=path
-        path,_=QFileDialog.getSaveFileName(self,'저장',CURRENT_PATH,'자기소개서 파일 (*.selfintro)','자기소개서 파일 (*.selfintro)')
+        path,_=QFileDialog.getSaveFileName(self,'저장',CURRENT_PATH,'자기소개서 파일 (*.selfinstruct)','자기소개서 파일 (*.selfinstruct)')
         if path:
             self.__save()
         else:
             path=oldpath
     
-    def __save(self):
-        print('save')
+    def __save_history(self):
+        name=datetime.datetime.now().strftime('%m-%d_%H-%M-%S')
+        self.__save(CURRENT_PATH+'history\\'+name+'.selfinstruct',do_history=False)
+    
+    def __save(self,dst=None,*,do_history=True):
+        if not dst:
+            dst=path
+        #pack data
         res={
             '1'    : str(self.pteNo1.toPlainText()),
             '2'    : str(self.pteNo2.toPlainText()),
@@ -162,13 +167,16 @@ class Write(QMainWindow,writeUI.Ui_write):
             'save' : [self.chkAutoSave.isChecked(), self.spTime.value()]
             ,'test':'가나다abcABC123'
         }
+        #write data
         try:
-            save_data(res,path)
+            save_data(res,dst)
         except json.JSONDecodeError as e:
             reply=QMessageBox.warning(self,'Save Error','데이터 쓰기 오류 발생\nTraceBack:\n%s\n재시도?' %str(e),QMessageBox.Retry|QMessageBox.Cancel)
             if reply==QMessageBox.Retry:
-                self.__save()
+                self.__save(dst)
         else:
+            if HISTORY and do_history:
+                self.__save_history()
             self.__saved=True
     
     def __export(self):
@@ -182,34 +190,23 @@ class Write(QMainWindow,writeUI.Ui_write):
                 file.write('#'*5+'3번 문항 / 글자수: %s/%s' %(len(self.pteNo3.toPlainText()),LENGTH[2])+'#'*5+'\n')
                 file.write(self.pteNo3.toPlainText()+'\n')
     
-    def __ask_close(self):
-        reply=QMessageBox.question(self,'종료','저장하지 않고 종료?',QMessageBox.Save|QMessageBox.Discard|QMessageBox.Cancel)
-        if reply==QMessageBox.Save:
-            return 1
-        elif reply==QMessageBox.Discard:
-            return 2
-        elif reply==QMessageBox.Cancel:
-            return 0
-        else:
-            raise ValueError
-    
     def closeEvent(self,event):
         if self.__saved:
             event.accept()
         else:
-            reply=self.__ask_close()
-            if reply==1:
+            reply=QMessageBox.question(self,'종료','저장하지 않고 종료?',QMessageBox.Save|QMessageBox.Discard|QMessageBox.Cancel)
+            if reply==QMessageBox.Save:
                 self.__save()
                 event.accept()
-            elif reply==2:
+            elif reply==QMessageBox.Discard:
                 event.accept()
-            elif reply==0:
+            elif reply==QMessageBox.Cancel:
                 event.ignore()
 
 
 if __name__=='__main__':
     import ctypes
-    myappid = 'hys.selfintro'
+    myappid = 'hys.selfinstruct'
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
     
     app=QApplication(sys.argv[1:])

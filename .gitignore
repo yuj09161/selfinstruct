@@ -1,2 +1,4 @@
-__pycache__/
-*.selfintro
+\__pycache__\
+\history\
+*.selfinstruct
+*.txt
