@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
+ <class>write</class>
+ <widget class="QMainWindow" name="write">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -344,7 +344,78 @@
      <height>26</height>
     </rect>
    </property>
+   <widget class="QMenu" name="save">
+    <property name="title">
+     <string>파일</string>
+    </property>
+    <addaction name="acLoad"/>
+    <addaction name="acSave"/>
+    <addaction name="separator"/>
+    <addaction name="acSaveAs"/>
+    <addaction name="acExport"/>
+    <addaction name="separator"/>
+    <addaction name="acExit"/>
+   </widget>
+   <widget class="QMenu" name="config">
+    <property name="title">
+     <string>설정</string>
+    </property>
+    <widget class="QMenu" name="subAutoSave">
+     <property name="title">
+      <string>자동 저장</string>
+     </property>
+     <addaction name="acActive"/>
+    </widget>
+    <addaction name="subAutoSave"/>
+   </widget>
+   <widget class="QMenu" name="info">
+    <property name="title">
+     <string>정보</string>
+    </property>
+    <addaction name="acInfo"/>
+   </widget>
+   <addaction name="save"/>
+   <addaction name="config"/>
+   <addaction name="info"/>
   </widget>
+  <action name="acLoad">
+   <property name="text">
+    <string>불러오기</string>
+   </property>
+  </action>
+  <action name="acSave">
+   <property name="text">
+    <string>저장</string>
+   </property>
+  </action>
+  <action name="acSaveAs">
+   <property name="text">
+    <string>다른 이름으로 저장</string>
+   </property>
+  </action>
+  <action name="acExport">
+   <property name="text">
+    <string>내보내기</string>
+   </property>
+  </action>
+  <action name="acExit">
+   <property name="text">
+    <string>종료</string>
+   </property>
+  </action>
+  <action name="acActive">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>시간</string>
+   </property>
+  </action>
+  <action name="acInfo">
+   <property name="text">
+    <string>정보</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

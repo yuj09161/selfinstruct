@@ -8,15 +8,32 @@ from PySide2.QtWidgets import *
 
 class CustomScrollArea(QScrollArea):
     resized=Signal(QSize)
-    
     def resizeEvent(self,event):
         super().resizeEvent(event)
         self.resized.emit(event.size())
 
 class Ui_write(object):
-    def setupUi(self, MainWindow):
-        MainWindow.resize(800, 600)
-        self.centralwidget = QWidget(MainWindow)
+    def setupUi(self, write):
+        write.resize(800, 600)
+        
+        #action for menu
+        self.acLoad = QAction(write)
+        self.acLoad.setObjectName(u"acLoad")
+        self.acSave = QAction(write)
+        self.acSave.setObjectName(u"acSave")
+        self.acSaveAs = QAction(write)
+        self.acSaveAs.setObjectName(u"acSaveAs")
+        self.acExport = QAction(write)
+        self.acExport.setObjectName(u"acExport")
+        self.acExit = QAction(write)
+        self.acExit.setObjectName(u"acExit")
+        self.acActive = QAction(write)
+        self.acActive.setObjectName(u"acActive")
+        self.acActive.setCheckable(True)
+        self.acInfo = QAction(write)
+        self.acInfo.setObjectName(u"acInfo")
+        
+        self.centralwidget = QWidget(write)
         self.glCentral = QGridLayout(self.centralwidget)
         
         sizePolicy_PF = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
@@ -158,34 +175,70 @@ class Ui_write(object):
 
         self.glCentral.addWidget(self.widMenu, 1, 0, 1, 1)
 
-        MainWindow.setCentralWidget(self.centralwidget)
-        #MainWindow.setLayout(self.glCentral)
+        write.setCentralWidget(self.centralwidget)
         
-        self.menubar = QMenuBar(MainWindow)
+        #menu
+        self.menubar = QMenuBar(write)
+        self.menubar.setObjectName(u"menubar")
         self.menubar.setGeometry(QRect(0, 0, 800, 26))
-        MainWindow.setMenuBar(self.menubar)
+        self.save = QMenu(self.menubar)
+        self.save.setObjectName(u"save")
+        self.config = QMenu(self.menubar)
+        self.config.setObjectName(u"config")
+        self.subAutoSave = QMenu(self.config)
+        self.subAutoSave.setObjectName(u"subAutoSave")
+        self.info = QMenu(self.menubar)
+        self.info.setObjectName(u"info")
+        write.setMenuBar(self.menubar)
 
-        self.retranslateUi(MainWindow)
+        self.menubar.addAction(self.save.menuAction())
+        self.menubar.addAction(self.config.menuAction())
+        self.menubar.addAction(self.info.menuAction())
+        self.save.addAction(self.acLoad)
+        self.save.addAction(self.acSave)
+        self.save.addSeparator()
+        self.save.addAction(self.acSaveAs)
+        self.save.addAction(self.acExport)
+        self.save.addSeparator()
+        self.save.addAction(self.acExit)
+        self.config.addAction(self.subAutoSave.menuAction())
+        self.subAutoSave.addAction(self.acActive)
+        self.info.addAction(self.acInfo)
 
-        QMetaObject.connectSlotsByName(MainWindow)
+        self.retranslateUi(write)
+
+        QMetaObject.connectSlotsByName(write)
     # setupUi
 
-    def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"자기소개서 작성 보조 by HYS", None))
-        self.lbNo3.setText(QCoreApplication.translate("MainWindow", u"3번: 학교 생활 중 배려, 나눔, 협력, 갈등 관리 등을\n실천한 사례를 들고, 그 과정을 통해 배우고 느낀점을 중심으로 기술", None))
+    def retranslateUi(self, write):
+        write.setWindowTitle(QCoreApplication.translate("write", u"자기소개서 작성 보조 by HYS", None))
+        self.lbNo3.setText(QCoreApplication.translate("write", u"3번: 학교 생활 중 배려, 나눔, 협력, 갈등 관리 등을\n실천한 사례를 들고, 그 과정을 통해 배우고 느낀점을 중심으로 기술", None))
         self.lbCount1.setText("")
-        self.lbTitleNum.setText(QCoreApplication.translate("MainWindow", u"\ubc88\ud638", None))
-        self.lbTitleCount.setText(QCoreApplication.translate("MainWindow", u"\uae00\uc790\uc218", None))
-        self.lbNo2.setText(QCoreApplication.translate("MainWindow", u"2번: 고등학교 재학기간 중 본인이 의미를 두고 노력했던\n교내 활동(3개 이내)을 통해 배우고 느낀점을 중심으로 기술", None))
-        self.lbNo1.setText(QCoreApplication.translate("MainWindow", u"1번: 고등학교 재학기간 중 학업에 기울인\n노력과 학습 경험을 통해, 배우고 느낀점을 중심으로 기술", None))
+        self.lbTitleNum.setText(QCoreApplication.translate("write", u"\ubc88\ud638", None))
+        self.lbTitleCount.setText(QCoreApplication.translate("write", u"\uae00\uc790\uc218", None))
+        self.lbNo2.setText(QCoreApplication.translate("write", u"2번: 고등학교 재학기간 중 본인이 의미를 두고 노력했던\n교내 활동(3개 이내)을 통해 배우고 느낀점을 중심으로 기술", None))
+        self.lbNo1.setText(QCoreApplication.translate("write", u"1번: 고등학교 재학기간 중 학업에 기울인\n노력과 학습 경험을 통해, 배우고 느낀점을 중심으로 기술", None))
         self.lbCount2.setText("")
         self.lbCount3.setText("")
-        self.lbTitleContent.setText(QCoreApplication.translate("MainWindow", u"\ub0b4\uc6a9", None))
-        self.btnSaveAs.setText(QCoreApplication.translate("MainWindow", u"\ub2e4\ub978 \uc774\ub984\uc73c\ub85c \uc800\uc7a5", None))
-        self.btnSave.setText(QCoreApplication.translate("MainWindow", u"\uc800\uc7a5", None))
-        self.spTime.setSuffix(QCoreApplication.translate("MainWindow", u"\ubd84", None))
-        self.btnExit.setText(QCoreApplication.translate("MainWindow", u"\uc885\ub8cc", None))
-        self.btnLoad.setText(QCoreApplication.translate("MainWindow", u"\ubd88\ub7ec\uc624\uae30", None))
-        self.btnExport.setText(QCoreApplication.translate("MainWindow", u"\ub0b4\ubcf4\ub0b4\uae30", None))
-        self.chkAutoSave.setText(QCoreApplication.translate("MainWindow", u"\uc790\ub3d9 \uc800\uc7a5", None))
+        self.lbTitleContent.setText(QCoreApplication.translate("write", u"\ub0b4\uc6a9", None))
+        self.btnSaveAs.setText(QCoreApplication.translate("write", u"\ub2e4\ub978 \uc774\ub984\uc73c\ub85c \uc800\uc7a5", None))
+        self.btnSave.setText(QCoreApplication.translate("write", u"\uc800\uc7a5", None))
+        #self.spTime.setSuffix(QCoreApplication.translate("write", u"\ubd84", None))
+        self.btnExit.setText(QCoreApplication.translate("write", u"\uc885\ub8cc", None))
+        self.btnLoad.setText(QCoreApplication.translate("write", u"\ubd88\ub7ec\uc624\uae30", None))
+        self.btnExport.setText(QCoreApplication.translate("write", u"\ub0b4\ubcf4\ub0b4\uae30", None))
+        #self.chkAutoSave.setText(QCoreApplication.translate("write", u"\uc790\ub3d9 \uc800\uc7a5", None))
+        
+        
+        self.acLoad.setText(QCoreApplication.translate("write", u"\ubd88\ub7ec\uc624\uae30", None))
+        self.acSave.setText(QCoreApplication.translate("write", u"\uc800\uc7a5", None))
+        self.acSaveAs.setText(QCoreApplication.translate("write", u"\ub2e4\ub978 \uc774\ub984\uc73c\ub85c \uc800\uc7a5", None))
+        self.acExport.setText(QCoreApplication.translate("write", u"\ub0b4\ubcf4\ub0b4\uae30", None))
+        self.acExit.setText(QCoreApplication.translate("write", u"\uc885\ub8cc", None))
+        self.acActive.setText(QCoreApplication.translate("write", u"\uc2dc\uac04", None))
+        self.acInfo.setText(QCoreApplication.translate("write", u"\uc815\ubcf4", None))
+        self.save.setTitle(QCoreApplication.translate("write", u"\ud30c\uc77c", None))
+        self.config.setTitle(QCoreApplication.translate("write", u"\uc124\uc815", None))
+        self.subAutoSave.setTitle(QCoreApplication.translate("write", u"\uc790\ub3d9 \uc800\uc7a5", None))
+        self.info.setTitle(QCoreApplication.translate("write", u"\uc815\ubcf4", None))
     # retranslateUi

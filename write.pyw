@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-from PySide2.QtCore import (QCoreApplication, QMetaObject, QObject, QPoint,
-    QRect, QSize, QUrl, Qt, QTimer)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QLinearGradient, QPalette, QPainter, QPixmap,
-    QRadialGradient, QCloseEvent)
+from PySide2.QtCore import QRect, QTimer
+from PySide2.QtGui import QFont, QIcon, QCloseEvent, QKeySequence
 from PySide2.QtWidgets import *
 import writeUI
 
@@ -32,6 +29,7 @@ class Write(QMainWindow,writeUI.Ui_write):
     def __init__(self,file=None):
         def count(n):
             self.__saved=False
+            self.btnSave.setStyleSheet('color:red')
             self.__count(n)
         def resize(size):
             self.scwMain.resize(size.width(),self.scwMain.height())
@@ -69,19 +67,24 @@ class Write(QMainWindow,writeUI.Ui_write):
         
         self.show()
         
+        #register shortcuts
+        QShortcut(QKeySequence.fromString('Ctrl+S'),self).activated.connect(self.__save)
+        
+        #connect buttons
         self.btnExport.clicked.connect(self.__export)
         self.btnLoad.clicked.connect(self.__load_as)
         self.btnSave.clicked.connect(self.__save)
         self.btnSaveAs.clicked.connect(self.__save_as)
         self.btnExit.clicked.connect(self.close)
         
+        #callback
         self.chkAutoSave.stateChanged.connect(lambda x: self.__auto_save(bool(x)))
         self.spTime.valueChanged.connect(self.__auto_save)
         self.pteNo1.textChanged.connect(lambda: count(1))
         self.pteNo2.textChanged.connect(lambda: count(2))
         self.pteNo3.textChanged.connect(lambda: count(3))
         
-        self.scMain.resized.connect(resize)
+        self.scMain.resized.connect(resize) #adjust length at resize
     
     def __count(self,n=None):
         if not n:
@@ -165,7 +168,6 @@ class Write(QMainWindow,writeUI.Ui_write):
             '2'    : str(self.pteNo2.toPlainText()),
             '3'    : str(self.pteNo3.toPlainText()),
             'save' : [self.chkAutoSave.isChecked(), self.spTime.value()]
-            ,'test':'가나다abcABC123'
         }
         #write data
         try:
@@ -177,6 +179,7 @@ class Write(QMainWindow,writeUI.Ui_write):
         else:
             if HISTORY and do_history:
                 self.__save_history()
+            self.btnSave.setStyleSheet('')
             self.__saved=True
     
     def __export(self):
