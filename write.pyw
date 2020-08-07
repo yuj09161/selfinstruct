@@ -179,7 +179,9 @@ class Write(QMainWindow,writeUI.Ui_write):
         else:
             if HISTORY and do_history:
                 self.__save_history()
-            self.btnSave.setStyleSheet('')
+                self.btnSave.setStyleSheet('')
+            else:
+                self.btnSave.setStyleSheet('color:blue')
             self.__saved=True
     
     def __export(self):
