@@ -133,6 +133,12 @@ class Ui_write(object):
         self.widMenu = QWidget(self.centralwidget)
         self.glMenu = QGridLayout(self.widMenu)
         
+        self.btnSave = QPushButton(self.widMenu)
+        sizePolicy_FF.setHeightForWidth(self.btnSave.sizePolicy().hasHeightForWidth())
+        self.btnSave.setSizePolicy(sizePolicy_FF)
+        self.glMenu.addWidget(self.btnSave, 0, 0, 1, 1)
+        
+        '''
         self.btnExport = QPushButton(self.widMenu)
         sizePolicy_FF.setHeightForWidth(self.btnExport.sizePolicy().hasHeightForWidth())
         self.btnExport.setSizePolicy(sizePolicy_FF)
@@ -143,16 +149,12 @@ class Ui_write(object):
         self.btnLoad.setSizePolicy(sizePolicy_FF)
         self.glMenu.addWidget(self.btnLoad, 0, 1, 1, 1)
         
-        self.btnSave = QPushButton(self.widMenu)
-        sizePolicy_FF.setHeightForWidth(self.btnSave.sizePolicy().hasHeightForWidth())
-        self.btnSave.setSizePolicy(sizePolicy_FF)
-        self.glMenu.addWidget(self.btnSave, 0, 2, 1, 1)
-        
         self.btnSaveAs = QPushButton(self.widMenu)
         sizePolicy_FF.setHeightForWidth(self.btnSaveAs.sizePolicy().hasHeightForWidth())
         self.btnSaveAs.setSizePolicy(sizePolicy_FF)
         self.glMenu.addWidget(self.btnSaveAs, 0, 3, 1, 1)
-
+        '''
+        
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.glMenu.addItem(self.horizontalSpacer, 0, 4, 1, 1)
 
@@ -221,13 +223,16 @@ class Ui_write(object):
         self.lbCount2.setText("")
         self.lbCount3.setText("")
         self.lbTitleContent.setText(QCoreApplication.translate("write", u"\ub0b4\uc6a9", None))
-        self.btnSaveAs.setText(QCoreApplication.translate("write", u"\ub2e4\ub978 \uc774\ub984\uc73c\ub85c \uc800\uc7a5", None))
+        
         self.btnSave.setText(QCoreApplication.translate("write", u"\uc800\uc7a5", None))
-        #self.spTime.setSuffix(QCoreApplication.translate("write", u"\ubd84", None))
-        self.btnExit.setText(QCoreApplication.translate("write", u"\uc885\ub8cc", None))
+        '''
+        self.btnSaveAs.setText(QCoreApplication.translate("write", u"\ub2e4\ub978 \uc774\ub984\uc73c\ub85c \uc800\uc7a5", None))
         self.btnLoad.setText(QCoreApplication.translate("write", u"\ubd88\ub7ec\uc624\uae30", None))
         self.btnExport.setText(QCoreApplication.translate("write", u"\ub0b4\ubcf4\ub0b4\uae30", None))
-        #self.chkAutoSave.setText(QCoreApplication.translate("write", u"\uc790\ub3d9 \uc800\uc7a5", None))
+        '''
+        self.btnExit.setText(QCoreApplication.translate("write", u"\uc885\ub8cc", None))
+        self.spTime.setSuffix(QCoreApplication.translate("write", u"\ubd84", None))
+        self.chkAutoSave.setText(QCoreApplication.translate("write", u"\uc790\ub3d9 \uc800\uc7a5", None))
         
         
         self.acLoad.setText(QCoreApplication.translate("write", u"\ubd88\ub7ec\uc624\uae30", None))

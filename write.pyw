@@ -12,6 +12,18 @@ CURRENT_PATH=os.path.dirname(os.path.abspath('__file__'))+'\\'
 LENGTH=['1000','1500','1000']
 path=CURRENT_PATH+'last.selfinstruct'
 data={'1':'', '2':'', '3':'', 'auto_save':[True,1]}
+LOGO='''
+made by:
+###############################
+
+ H   H Y   Y   SSS   `s
+ H   H  Y Y   S      self
+ HHHHH   Y     SSS   자기소개서
+ H   H   Y        S  instruct
+ H   H   Y     SSS   helper
+
+###############################
+'''
 
 
 def load_data(path):
@@ -71,10 +83,12 @@ class Write(QMainWindow,writeUI.Ui_write):
         QShortcut(QKeySequence.fromString('Ctrl+S'),self).activated.connect(self.__save)
         
         #callback_button
+        self.btnSave.clicked.connect(self.__save)
+        '''
         self.btnExport.clicked.connect(self.__export)
         self.btnLoad.clicked.connect(self.__load_as)
-        self.btnSave.clicked.connect(self.__save)
         self.btnSaveAs.clicked.connect(self.__save_as)
+        '''
         self.btnExit.clicked.connect(self.close)
         
         #callback
@@ -98,21 +112,21 @@ class Write(QMainWindow,writeUI.Ui_write):
     
     def __count(self,n=None):
         if not n:
-            a=len(self.pteNo1.toPlainText())
-            b=len(self.pteNo2.toPlainText())
-            c=len(self.pteNo3.toPlainText())
-            self.lbCount1.setText(str(a)+'/'+LENGTH[0])
-            self.lbCount2.setText(str(b)+'/'+LENGTH[1])
-            self.lbCount3.setText(str(c)+'/'+LENGTH[2])
+            a=self.pteNo1.toPlainText()
+            b=self.pteNo2.toPlainText()
+            c=self.pteNo3.toPlainText()
+            self.lbCount1.setText(str(len(a))+'/'+LENGTH[0]+'\n('+str(len(a.replace('\n','')))+')')
+            self.lbCount2.setText(str(len(b))+'/'+LENGTH[1]+'\n('+str(len(b.replace('\n','')))+')')
+            self.lbCount3.setText(str(len(c))+'/'+LENGTH[2]+'\n('+str(len(c.replace('\n','')))+')')
         elif n==1:
-            a=len(self.pteNo1.toPlainText())
-            self.lbCount1.setText(str(a)+'/'+LENGTH[0])
+            a=self.pteNo1.toPlainText()
+            self.lbCount1.setText(str(len(a))+'/'+LENGTH[0]+'\n('+str(len(a.replace('\n','')))+')')
         elif n==2:
-            b=len(self.pteNo2.toPlainText())
-            self.lbCount2.setText(str(b)+'/'+LENGTH[1])
+            b=self.pteNo2.toPlainText()
+            self.lbCount2.setText(str(len(b))+'/'+LENGTH[1]+'\n('+str(len(b.replace('\n','')))+')')
         elif n==3:
-            c=len(self.pteNo3.toPlainText())
-            self.lbCount3.setText(str(c)+'/'+LENGTH[2])
+            c=self.pteNo3.toPlainText()
+            self.lbCount3.setText(str(len(c))+'/'+LENGTH[2]+'\n('+str(len(c.replace('\n','')))+')')
         else:
             raise ValueError
     
@@ -162,50 +176,54 @@ class Write(QMainWindow,writeUI.Ui_write):
         path,_=QFileDialog.getSaveFileName(self,'저장',CURRENT_PATH,'자기소개서 파일 (*.selfinstruct)','자기소개서 파일 (*.selfinstruct)')
         if path:
             self.__save()
-        else:
-            path=oldpath
     
     def __save_history(self):
         if not 'history' in os.listdir():
             os.mkdir('history')
         name=datetime.datetime.now().strftime('%m-%d_%H-%M-%S')
-        self.__save(CURRENT_PATH+'history\\'+name+'.selfinstruct',do_history=False)
+        self.__save(dst=CURRENT_PATH+'history\\'+name+'.selfinstruct',do_history=False)
     
-    def __save(self,dst=None,*,do_history=True):
-        if not dst:
-            dst=path
-        #pack data
-        res={
-            '1'    : str(self.pteNo1.toPlainText()),
-            '2'    : str(self.pteNo2.toPlainText()),
-            '3'    : str(self.pteNo3.toPlainText()),
-            'save' : [self.chkAutoSave.isChecked(), self.spTime.value()]
-        }
-        #write data
-        try:
-            save_data(res,dst)
-        except json.JSONDecodeError as e:
-            reply=QMessageBox.warning(self,'Save Error','데이터 쓰기 오류 발생\nTraceBack:\n%s\n재시도?' %str(e),QMessageBox.Retry|QMessageBox.Cancel)
-            if reply==QMessageBox.Retry:
-                self.__save(dst)
-        else:
-            if HISTORY and do_history:
-                self.__save_history()
-                self.btnSave.setStyleSheet('')
+    def __save(self,*,dst=None,do_history=True):
+        if not self.__saved:
+            if not dst:
+                dst=path
+            #pack data
+            res={
+                '1'    : str(self.pteNo1.toPlainText()),
+                '2'    : str(self.pteNo2.toPlainText()),
+                '3'    : str(self.pteNo3.toPlainText()),
+                'save' : [self.chkAutoSave.isChecked(), self.spTime.value()]
+            }
+            #write data
+            try:
+                save_data(res,dst)
+            except json.JSONDecodeError as e:
+                reply=QMessageBox.warning(self,'Save Error','데이터 쓰기 오류 발생\nTraceBack:\n%s\n재시도?' %str(e),QMessageBox.Retry|QMessageBox.Cancel)
+                if reply==QMessageBox.Retry:
+                    self.__save(dst=dst)
             else:
-                self.btnSave.setStyleSheet('color:blue')
-            self.__saved=True
+                if HISTORY and do_history:
+                    self.__save_history()
+                    self.btnSave.setStyleSheet('')
+                    self.__saved=True
+                else:
+                    self.btnSave.setStyleSheet('color:blue')
     
     def __export(self):
         path,_=QFileDialog.getSaveFileName(self,'저장',CURRENT_PATH,'텍스트 파일 (*.txt)','텍스트 파일 (*.txt)')
         if path:
             with open(path,'w') as file:
-                file.write('#'*5+'1번 문항 / 글자수: %s/%s' %(len(self.pteNo1.toPlainText()),LENGTH[0])+'#'*5+'\n')
-                file.write(self.pteNo1.toPlainText()+'\n')
-                file.write('#'*5+'2번 문항 / 글자수: %s/%s' %(len(self.pteNo2.toPlainText()),LENGTH[1])+'#'*5+'\n')
-                file.write(self.pteNo2.toPlainText()+'\n')
-                file.write('#'*5+'3번 문항 / 글자수: %s/%s' %(len(self.pteNo3.toPlainText()),LENGTH[2])+'#'*5+'\n')
-                file.write(self.pteNo3.toPlainText()+'\n')
+                content1=self.pteNo1.toPlainText().replace('\n','')
+                content2=self.pteNo2.toPlainText().replace('\n','')
+                content3=self.pteNo3.toPlainText().replace('\n','')
+                
+                file.write('#'*5+'1번 문항 / 글자수: %s/%s' %(len(content1),LENGTH[0])+'#'*5+'\n')
+                file.write(content1+'\n'*2)
+                file.write('#'*5+'2번 문항 / 글자수: %s/%s' %(len(content2),LENGTH[1])+'#'*5+'\n'*2)
+                file.write(content2+'\n'*2)
+                file.write('#'*5+'3번 문항 / 글자수: %s/%s' %(len(content3),LENGTH[2])+'#'*5+'\n'*2)
+                file.write(content3+'\n'*2)
+                file.write(LOGO)
     
     def closeEvent(self,event):
         if self.__saved:
