@@ -70,7 +70,7 @@ class Write(QMainWindow,writeUI.Ui_write):
         #register shortcuts
         QShortcut(QKeySequence.fromString('Ctrl+S'),self).activated.connect(self.__save)
         
-        #connect buttons
+        #callback_button
         self.btnExport.clicked.connect(self.__export)
         self.btnLoad.clicked.connect(self.__load_as)
         self.btnSave.clicked.connect(self.__save)
@@ -83,6 +83,16 @@ class Write(QMainWindow,writeUI.Ui_write):
         self.pteNo1.textChanged.connect(lambda: count(1))
         self.pteNo2.textChanged.connect(lambda: count(2))
         self.pteNo3.textChanged.connect(lambda: count(3))
+        
+        #callback_menu
+        self.acLoad.triggered.connect(self.__load_as)
+        self.acSave.triggered.connect(self.__save)
+        self.acSaveAs.triggered.connect(self.__save_as)
+        self.acExport.triggered.connect(self.__export)
+        self.acExit.triggered.connect(self.close)
+        #self.acActive.triggered.connect()
+        #self.acInfo.triggered.connect()
+
         
         self.scMain.resized.connect(resize) #adjust length at resize
     
@@ -156,6 +166,8 @@ class Write(QMainWindow,writeUI.Ui_write):
             path=oldpath
     
     def __save_history(self):
+        if not 'history' in os.listdir():
+            os.mkdir('history')
         name=datetime.datetime.now().strftime('%m-%d_%H-%M-%S')
         self.__save(CURRENT_PATH+'history\\'+name+'.selfinstruct',do_history=False)
     
