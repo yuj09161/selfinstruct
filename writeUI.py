@@ -213,7 +213,7 @@ class Ui_write(object):
     # setupUi
 
     def retranslateUi(self, write):
-        write.setWindowTitle(QCoreApplication.translate("write", u"자기소개서 작성 보조 by HYS", None))
+        write.setWindowTitle(QCoreApplication.translate("write", u"자기소개서 작성 보조", None))
         self.lbNo3.setText(QCoreApplication.translate("write", u"3번: 학교 생활 중 배려, 나눔, 협력, 갈등 관리 등을\n실천한 사례를 들고, 그 과정을 통해 배우고 느낀점을 중심으로 기술", None))
         self.lbCount1.setText("")
         self.lbTitleNum.setText(QCoreApplication.translate("write", u"\ubc88\ud638", None))
