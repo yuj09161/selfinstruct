@@ -217,7 +217,7 @@ class Write(QMainWindow,writeUI.Ui_write):
                 content2=self.pteNo2.toPlainText().replace('\n','')
                 content3=self.pteNo3.toPlainText().replace('\n','')
                 
-                file.write('#'*5+'1번 문항 / 글자수: %s/%s' %(len(content1),LENGTH[0])+'#'*5+'\n')
+                file.write('#'*5+'1번 문항 / 글자수: %s/%s' %(len(content1),LENGTH[0])+'#'*5+'\n'*2)
                 file.write(content1+'\n'*2)
                 file.write('#'*5+'2번 문항 / 글자수: %s/%s' %(len(content2),LENGTH[1])+'#'*5+'\n'*2)
                 file.write(content2+'\n'*2)
