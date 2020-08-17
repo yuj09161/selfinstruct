@@ -4,16 +4,21 @@ from PySide2.QtGui import QFont, QIcon, QCloseEvent, QKeySequence
 from PySide2.QtWidgets import *
 import writeUI
 
-import os,sys,json,datetime
+import os,sys,json,datetime,re
 
+#Config
 HISTORY=True
+#end Config
 
+NL='\n'
 CURRENT_PATH=os.path.dirname(os.path.abspath('__file__'))+'\\'
-LENGTH=['1000','1500','1000']
-path=CURRENT_PATH+'last.selfinstruct'
-data={'1':'', '2':'', '3':'', 'auto_save':[True,1]}
+DEFAULT_PATH=CURRENT_PATH+'last.selfinstruct'
+FILTERS=('텍스트 파일 (*.txt)','Excel 호환 (*.tsv)')
+#data={'1':'', '2':'', '3':'', 'auto_save':[True,1]}
+#LENGTH=['1000','1500','1000']
+
 LOGO='''
-made by:
+writed with:
 ###############################
 
  H   H Y   Y   SSS   `s
@@ -37,42 +42,46 @@ def save_data(data,path):
         json.dump(data,file,indent=4,ensure_ascii=False)
 
 
+
 class Write(QMainWindow,writeUI.Ui_write):
-    def __init__(self,file=None):
-        def count(n):
-            self.__saved=False
-            self.btnSave.setStyleSheet('color:red')
-            self.__count(n)
+    def __init__(self,file=DEFAULT_PATH):
         def resize(size):
             self.scwMain.resize(size.width(),self.scwMain.height())
+        def rm_dspace():
+            for pte in self.pte:
+                pte.setPlainText(re.sub(' +',' ',pte.toPlainText()))
         
         super().__init__()
-        self.setupUi(self)
+        self.__oldpath=file
         
-        if file:
-            global path
-            path=file
-        
-        if os.path.isfile(path):
+        if os.path.isfile(file):
             while True:
                 try:
-                    data=load_data(path)
+                    data=load_data(file)
                 except json.JSONDecodeError as e:
                     reply=QMessageBox.warning(self,'Load Error','이전 데이터에 오류 발생\nTraceBack:\n%s\n재시도?' %str(e),QMessageBox.Retry|QMessageBox.Cancel)
                     if reply==QMessageBox.Cancel:
-                        self.show()
-                        break
+                        self.destroy()
+                        sys.exit(1)
                 else:
-                    self.__load(data)
                     break
+        else:
+            QMessageBox.critical(self,'File not exist','없는 파일')
+            self.destroy()
+            sys.exit(2)
+        
+        self.article=[]
+        for k in range(len(data)-1):
+            self.article.append(data[k][:3])
+        
+        self.setupUi(self,self.article)
+        self.__loader(data)
         
         self.__tmr=QTimer()
         self.__tmr.timeout.connect(lambda: self.__save(do_history=False))
         if self.chkAutoSave.isChecked():
             self.__tmr.setInterval(self.spTime.value()*1000*60)
             self.__tmr.start()
-        
-        self.__count()
         
         self.__saved=True
         self.spTime.setEnabled(self.chkAutoSave.isChecked())
@@ -84,51 +93,33 @@ class Write(QMainWindow,writeUI.Ui_write):
         
         #callback_button
         self.btnSave.clicked.connect(self.__save)
-        '''
-        self.btnExport.clicked.connect(self.__export)
-        self.btnLoad.clicked.connect(self.__load_as)
-        self.btnSaveAs.clicked.connect(self.__save_as)
-        '''
         self.btnExit.clicked.connect(self.close)
         
         #callback
         self.chkAutoSave.stateChanged.connect(lambda x: self.__auto_save(bool(x)))
         self.spTime.valueChanged.connect(self.__auto_save)
-        self.pteNo1.textChanged.connect(lambda: count(1))
-        self.pteNo2.textChanged.connect(lambda: count(2))
-        self.pteNo3.textChanged.connect(lambda: count(3))
         
         #callback_menu
         self.acLoad.triggered.connect(self.__load_as)
         self.acSave.triggered.connect(self.__save)
-        self.acSaveAs.triggered.connect(self.__save_as)
+        self.acSaveAs.triggered.connect(lambda: self.__save_as(True))
+        self.acSaveCopy.triggered.connect(lambda: self.__save_as(False))
         self.acExport.triggered.connect(self.__export)
         self.acExit.triggered.connect(self.close)
-        #self.acActive.triggered.connect()
-        #self.acInfo.triggered.connect()
+        self.acDoubleSpace.triggered.connect(rm_dspace)
+        #self.acConfig.triggered.connect(self.__config)
+        #self.acInfo.triggered.connect(self.__info)
 
-        
         self.scMain.resized.connect(resize) #adjust length at resize
     
     def __count(self,n=None):
         if not n:
-            a=self.pteNo1.toPlainText()
-            b=self.pteNo2.toPlainText()
-            c=self.pteNo3.toPlainText()
-            self.lbCount1.setText(str(len(a))+'/'+LENGTH[0]+'\n('+str(len(a.replace('\n','')))+')')
-            self.lbCount2.setText(str(len(b))+'/'+LENGTH[1]+'\n('+str(len(b.replace('\n','')))+')')
-            self.lbCount3.setText(str(len(c))+'/'+LENGTH[2]+'\n('+str(len(c.replace('\n','')))+')')
-        elif n==1:
-            a=self.pteNo1.toPlainText()
-            self.lbCount1.setText(str(len(a))+'/'+LENGTH[0]+'\n('+str(len(a.replace('\n','')))+')')
-        elif n==2:
-            b=self.pteNo2.toPlainText()
-            self.lbCount2.setText(str(len(b))+'/'+LENGTH[1]+'\n('+str(len(b.replace('\n','')))+')')
-        elif n==3:
-            c=self.pteNo3.toPlainText()
-            self.lbCount3.setText(str(len(c))+'/'+LENGTH[2]+'\n('+str(len(c.replace('\n','')))+')')
+            for k in range(self.article_count):
+                tmp=self.pte[k].toPlainText()
+                self.lbCount[k].setText(f'{len(tmp)}/{self.article[k][2]}{NL}({len(tmp.replace(NL,""))})')  
         else:
-            raise ValueError
+            tmp=self.pte[n].toPlainText()
+            self.lbCount[n].setText(f'{len(tmp)}/{self.article[n][2]}{NL}({len(tmp.replace(NL,""))})')
     
     def __auto_save(self,arg):
         if type(arg) is int:
@@ -148,8 +139,6 @@ class Write(QMainWindow,writeUI.Ui_write):
             raise ValueError
     
     def __load_as(self):
-        global path
-        oldpath=path
         path,_=QFileDialog.getOpenFileName(self,'불러오기',CURRENT_PATH,'자기소개서 파일 (*.selfinstruct)','자기소개서 파일 (*.selfinstruct)')
         if path:
             try:
@@ -159,70 +148,81 @@ class Write(QMainWindow,writeUI.Ui_write):
                 if reply==QMessageBox.Retry:
                     self.__load_as()
             else:
-                self.__load(data)
-        else:
-            path=oldpath
+                self.__loader(data)
+                self.__oldpath=path
     
-    def __load(self,data):
-        self.pteNo1.setPlainText(data['1'])
-        self.pteNo2.setPlainText(data['2'])
-        self.pteNo3.setPlainText(data['3'])
-        self.chkAutoSave.setChecked(data['save'][0])
-        self.spTime.setValue(data['save'][1])
+    def __loader(self,data):
+        def count(n):
+            self.__saved=False
+            self.btnSave.setStyleSheet('color:red')
+            self.__count(n)
+        
+        def do_connect(k):
+            self.pte[k].textChanged.connect(lambda: count(k))
+        
+        self.article=[]
+        self.article_count=len(data)-1
+        for k in range(self.article_count):
+            self.article.append(data[k][:3])
+            self.pte[k].setPlainText(data[k][3])
+            do_connect(k)
+        self.chkAutoSave.setChecked(data[-1][0])
+        self.spTime.setValue(data[-1][1])
+        self.__count()
     
-    def __save_as(self):
-        global path
-        oldpath=path
+    def __save_as(self,change_path=True):
         path,_=QFileDialog.getSaveFileName(self,'저장',CURRENT_PATH,'자기소개서 파일 (*.selfinstruct)','자기소개서 파일 (*.selfinstruct)')
         if path:
-            self.__save()
+            self.__save(dst=path,change_path=change_path,force=True)
     
     def __save_history(self):
         if not 'history' in os.listdir():
-            os.mkdir('history')
+            os.mkdir(CURRENT_PATH+'history')
         name=datetime.datetime.now().strftime('%m-%d_%H-%M-%S')
         self.__save(dst=CURRENT_PATH+'history\\'+name+'.selfinstruct',do_history=False)
     
-    def __save(self,*,dst=None,do_history=True):
-        if not self.__saved:
+    def __save(self,*,dst=None,do_history=True,change_path=True,force=False):
+        if not self.__saved or force:
             if not dst:
-                dst=path
+                dst=self.__oldpath
             #pack data
-            res={
-                '1'    : str(self.pteNo1.toPlainText()),
-                '2'    : str(self.pteNo2.toPlainText()),
-                '3'    : str(self.pteNo3.toPlainText()),
-                'save' : [self.chkAutoSave.isChecked(), self.spTime.value()]
-            }
+            res=[]
+            for k in range(self.article_count):
+                res.append((*self.article[k],self.pte[k].toPlainText()))
+            res.append((self.chkAutoSave.isChecked(), self.spTime.value()))
             #write data
             try:
                 save_data(res,dst)
             except json.JSONDecodeError as e:
                 reply=QMessageBox.warning(self,'Save Error','데이터 쓰기 오류 발생\nTraceBack:\n%s\n재시도?' %str(e),QMessageBox.Retry|QMessageBox.Cancel)
                 if reply==QMessageBox.Retry:
-                    self.__save(dst=dst)
+                    self.__save(dst=dst,do_history=do_history,change_path=change_path,force=force)
             else:
-                if HISTORY and do_history:
+                if do_history and HISTORY:
                     self.__save_history()
                     self.btnSave.setStyleSheet('')
                     self.__saved=True
                 else:
                     self.btnSave.setStyleSheet('color:blue')
+                if change_path:
+                    self.__oldpath=dst
     
     def __export(self):
-        path,_=QFileDialog.getSaveFileName(self,'저장',CURRENT_PATH,'텍스트 파일 (*.txt)','텍스트 파일 (*.txt)')
+        path,ext=QFileDialog.getSaveFileName(self,'저장',CURRENT_PATH,';;'.join(FILTERS),FILTERS[0])
+        if FILTERS.index(ext)==0:
+            lnsep='\n\n'
+            enc='utf-8'
+        elif FILTERS.index(ext)==1:
+            lnsep='\n'
+            enc='cp949'
+        else:
+            raise ValueError
         if path:
-            with open(path,'w') as file:
-                content1=self.pteNo1.toPlainText().replace('\n','')
-                content2=self.pteNo2.toPlainText().replace('\n','')
-                content3=self.pteNo3.toPlainText().replace('\n','')
-                
-                file.write('#'*5+'1번 문항 / 글자수: %s/%s' %(len(content1),LENGTH[0])+'#'*5+'\n'*2)
-                file.write(content1+'\n'*2)
-                file.write('#'*5+'2번 문항 / 글자수: %s/%s' %(len(content2),LENGTH[1])+'#'*5+'\n'*2)
-                file.write(content2+'\n'*2)
-                file.write('#'*5+'3번 문항 / 글자수: %s/%s' %(len(content3),LENGTH[2])+'#'*5+'\n'*2)
-                file.write(content3+'\n'*2)
+            with open(path,'w',encoding=enc) as file:
+                for k in range(self.article_count):
+                    content=self.pte[k].toPlainText().replace('\n','')
+                    file.write(f'#####{self.article[k][0]} / 글자수: {len(content)}/{self.article[k][2]}#####'+lnsep)
+                    file.write(content+lnsep)
                 file.write(LOGO)
     
     def closeEvent(self,event):
@@ -249,6 +249,6 @@ if __name__=='__main__':
     if len(sys.argv)>1 and os.path.isfile(sys.argv[1]):
         write=Write(sys.argv[1])
     else:
-        write=Write()
+        write=Write(DEFAULT_PATH)
     
     sys.exit(app.exec_())
