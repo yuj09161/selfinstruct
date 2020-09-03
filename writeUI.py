@@ -13,7 +13,7 @@ class CustomScrollArea(QScrollArea):
         self.resized.emit(event.size())
 
 class Ui_write(object):
-    def setupUi(self, write, articles):
+    def setupUi(self, write):
         write.resize(800, 600)
         
         #action for menu
@@ -25,8 +25,10 @@ class Ui_write(object):
         self.acSaveAs.setObjectName(u"acSaveAs")
         self.acSaveCopy = QAction(write)
         self.acSaveCopy.setObjectName(u"acSaveCopy")
-        self.acExport = QAction(write)
-        self.acExport.setObjectName(u"acExport")
+        self.acExport_Ent = QAction(write)
+        self.acExport_Ent.setObjectName(u"acExport_Ent")
+        self.acExport_NoEnt = QAction(write)
+        self.acExport_NoEnt.setObjectName(u"acExport_NoEnt")
         self.acExit = QAction(write)
         self.acExit.setObjectName(u"acExit")
         self.acDoubleSpace = QAction(write)
@@ -36,73 +38,75 @@ class Ui_write(object):
         self.acInfo = QAction(write)
         self.acInfo.setObjectName(u"acInfo")
         
+        self.acConfig.setEnabled(False)
+        self.acInfo.setEnabled(False)
+        
         self.centralwidget = QWidget(write)
         self.glCentral = QGridLayout(self.centralwidget)
         
-        sizePolicy_PF = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-        sizePolicy_PF.setHorizontalStretch(0)
-        sizePolicy_PF.setVerticalStretch(0)
+        self.sizePolicy_PF = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        self.sizePolicy_PF.setHorizontalStretch(0)
+        self.sizePolicy_PF.setVerticalStretch(0)
         
-        sizePolicy_FF = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        sizePolicy_FF.setHorizontalStretch(0)
-        sizePolicy_FF.setVerticalStretch(0)
+        self.sizePolicy_FF = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.sizePolicy_FF.setHorizontalStretch(0)
+        self.sizePolicy_FF.setVerticalStretch(0)
         
-        sizePolicy_EI = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Ignored)
-        sizePolicy_EI.setHorizontalStretch(0)
-        sizePolicy_EI.setVerticalStretch(0)
+        self.sizePolicy_EP = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.sizePolicy_EP.setHorizontalStretch(0)
+        self.sizePolicy_EP.setVerticalStretch(0)
         
         #Main Scoll Area
         self.scMain = CustomScrollArea(self.centralwidget)
         self.scMain.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         
-        self.scwMain = QWidget()
-        self.scwMain.setGeometry(QRect(0, 0, 755, 2500))
-        
+        self.scwMain = QWidget(self.scMain)
         self.glMain = QGridLayout(self.scwMain)
 
         self.lbTitleNum = QLabel(self.scwMain)
-        sizePolicy_PF.setHeightForWidth(self.lbTitleNum.sizePolicy().hasHeightForWidth())
-        self.lbTitleNum.setSizePolicy(sizePolicy_PF)
+        self.sizePolicy_PF.setHeightForWidth(self.lbTitleNum.sizePolicy().hasHeightForWidth())
+        self.lbTitleNum.setSizePolicy(self.sizePolicy_PF)
         self.lbTitleNum.setAlignment(Qt.AlignCenter)
         self.glMain.addWidget(self.lbTitleNum, 0, 0, 1, 1)
 
         self.lbTitleCount = QLabel(self.scwMain)
-        sizePolicy_PF.setHeightForWidth(self.lbTitleCount.sizePolicy().hasHeightForWidth())
-        self.lbTitleCount.setSizePolicy(sizePolicy_PF)
+        self.sizePolicy_PF.setHeightForWidth(self.lbTitleCount.sizePolicy().hasHeightForWidth())
+        self.lbTitleCount.setSizePolicy(self.sizePolicy_PF)
         self.lbTitleCount.setAlignment(Qt.AlignCenter)
         self.glMain.addWidget(self.lbTitleCount, 0, 1, 1, 1)
 
         self.lbTitleContent = QLabel(self.scwMain)
-        sizePolicy_PF.setHeightForWidth(self.lbTitleContent.sizePolicy().hasHeightForWidth())
-        self.lbTitleContent.setSizePolicy(sizePolicy_PF)
+        self.sizePolicy_PF.setHeightForWidth(self.lbTitleContent.sizePolicy().hasHeightForWidth())
+        self.lbTitleContent.setSizePolicy(self.sizePolicy_PF)
         self.lbTitleContent.setAlignment(Qt.AlignCenter)
         self.glMain.addWidget(self.lbTitleContent, 1, 0, 1, 2)
 
+        self.lbNo=[]
         self.lbCount=[]
         self.pte=[]
-        for k in range(len(self.article)):
+        '''
+        for k in range(self.article_count):
             lbNo = QLabel(self.scwMain)
-            sizePolicy_PF.setHeightForWidth(lbNo.sizePolicy().hasHeightForWidth())
-            lbNo.setSizePolicy(sizePolicy_PF)
+            self.sizePolicy_PF.setHeightForWidth(lbNo.sizePolicy().hasHeightForWidth())
+            lbNo.setSizePolicy(self.sizePolicy_PF)
             lbNo.setAlignment(Qt.AlignCenter)
-            lbNo.setText(': '.join(self.article[k][:2]))
             self.glMain.addWidget(lbNo, 2*k+2, 0, 1, 1)
+            self.lbNo.append(lbNo)
 
             lbCount = QLabel(self.scwMain)
-            sizePolicy_FF.setHeightForWidth(lbCount.sizePolicy().hasHeightForWidth())
-            lbCount.setSizePolicy(sizePolicy_FF)
+            self.sizePolicy_FF.setHeightForWidth(lbCount.sizePolicy().hasHeightForWidth())
+            lbCount.setSizePolicy(self.sizePolicy_FF)
             lbCount.setAlignment(Qt.AlignCenter)
-            #lbCount.setText(f'0/{self.article[k][2]}\n(0)')
+            lbCount.setMinimumHeight(32)
             self.glMain.addWidget(lbCount, 2*k+2, 1, 1, 1)
+            self.lbCount.append(lbCount)
 
             pte = QPlainTextEdit(self.scwMain)
-            sizePolicy_EI.setHeightForWidth(pte.sizePolicy().hasHeightForWidth())
-            pte.setSizePolicy(sizePolicy_EI)
+            self.sizePolicy_EP.setHeightForWidth(pte.sizePolicy().hasHeightForWidth())
+            pte.setSizePolicy(self.sizePolicy_EP)
             self.glMain.addWidget(pte, 2*k+3, 0, 1, 2)
-            
-            self.lbCount.append(lbCount)
             self.pte.append(pte)
-
+        '''
         self.scMain.setWidget(self.scwMain)
         self.glCentral.addWidget(self.scMain, 0, 0, 1, 1)
     
@@ -111,28 +115,28 @@ class Ui_write(object):
         self.glMenu = QGridLayout(self.widMenu)
         
         self.btnSave = QPushButton(self.widMenu)
-        sizePolicy_FF.setHeightForWidth(self.btnSave.sizePolicy().hasHeightForWidth())
-        self.btnSave.setSizePolicy(sizePolicy_FF)
+        self.sizePolicy_FF.setHeightForWidth(self.btnSave.sizePolicy().hasHeightForWidth())
+        self.btnSave.setSizePolicy(self.sizePolicy_FF)
         self.glMenu.addWidget(self.btnSave, 0, 0, 1, 1)
         
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.glMenu.addItem(self.horizontalSpacer, 0, 4, 1, 1)
 
         self.chkAutoSave = QCheckBox(self.widMenu)
-        sizePolicy_FF.setHeightForWidth(self.chkAutoSave.sizePolicy().hasHeightForWidth())
-        self.chkAutoSave.setSizePolicy(sizePolicy_FF)
+        self.sizePolicy_FF.setHeightForWidth(self.chkAutoSave.sizePolicy().hasHeightForWidth())
+        self.chkAutoSave.setSizePolicy(self.sizePolicy_FF)
         self.glMenu.addWidget(self.chkAutoSave, 0, 5, 1, 1)
 
         self.spTime = QSpinBox(self.widMenu)
-        sizePolicy_FF.setHeightForWidth(self.spTime.sizePolicy().hasHeightForWidth())
-        self.spTime.setSizePolicy(sizePolicy_FF)
+        self.sizePolicy_FF.setHeightForWidth(self.spTime.sizePolicy().hasHeightForWidth())
+        self.spTime.setSizePolicy(self.sizePolicy_FF)
         self.spTime.setMinimum(1)
         self.spTime.setMaximum(60)
         self.glMenu.addWidget(self.spTime, 0, 6, 1, 1)
 
         self.btnExit = QPushButton(self.widMenu)
-        sizePolicy_FF.setHeightForWidth(self.btnExit.sizePolicy().hasHeightForWidth())
-        self.btnExit.setSizePolicy(sizePolicy_FF)
+        self.sizePolicy_FF.setHeightForWidth(self.btnExit.sizePolicy().hasHeightForWidth())
+        self.btnExit.setSizePolicy(self.sizePolicy_FF)
         self.glMenu.addWidget(self.btnExit, 0, 7, 1, 1)
 
         self.glCentral.addWidget(self.widMenu, 1, 0, 1, 1)
@@ -145,6 +149,8 @@ class Ui_write(object):
         self.menubar.setGeometry(QRect(0, 0, 800, 26))
         self.save = QMenu(self.menubar)
         self.save.setObjectName(u"save")
+        self.export = QMenu(self.menubar)
+        self.export.setObjectName(u"export")
         self.tools = QMenu(self.menubar)
         self.tools.setObjectName(u"tools")
         self.info = QMenu(self.menubar)
@@ -159,7 +165,9 @@ class Ui_write(object):
         self.save.addSeparator()
         self.save.addAction(self.acSaveAs)
         self.save.addAction(self.acSaveCopy)
-        self.save.addAction(self.acExport)
+        self.export.addAction(self.acExport_Ent)
+        self.export.addAction(self.acExport_NoEnt)
+        self.save.addAction(self.export.menuAction())
         self.save.addSeparator()
         self.save.addAction(self.acExit)
         self.tools.addAction(self.acDoubleSpace)
@@ -187,13 +195,15 @@ class Ui_write(object):
         self.acSave.setText(QCoreApplication.translate("write", u"\uc800\uc7a5", None))
         self.acSaveAs.setText(QCoreApplication.translate("write", u"\ub2e4\ub978 \uc774\ub984\uc73c\ub85c \uc800\uc7a5", None))
         self.acSaveCopy.setText(QCoreApplication.translate("write", u"\ub2e4\ub978 \uc774\ub984\uc73c\ub85c \uc0ac\ubcf8 \uc800\uc7a5", None))
-        self.acExport.setText(QCoreApplication.translate("write", u"\ub0b4\ubcf4\ub0b4\uae30", None))
+        self.acExport_Ent.setText(QCoreApplication.translate("write", u"\ub0b4\ubcf4\ub0b4\uae30\u0028\uc904\ubc14\uafc8 \ud3ec\ud568\u0029", None))
+        self.acExport_NoEnt.setText(QCoreApplication.translate("write", u"\ub0b4\ubcf4\ub0b4\uae30\u0028\uc904\ubc14\uafc8 \uc81c\uc678\u0029", None))
         self.acExit.setText(QCoreApplication.translate("write", u"\uc885\ub8cc", None))
         self.acDoubleSpace.setText(QCoreApplication.translate("write", u"\ub2e4\uc911 \uacf5\ubc31 \uc81c\uac70", None))
         self.acConfig.setText(QCoreApplication.translate("write", u"\uc124\uc815", None))
         self.acInfo.setText(QCoreApplication.translate("write", u"\uc815\ubcf4", None))
         
         self.save.setTitle(QCoreApplication.translate("write", u"\ud30c\uc77c", None))
+        self.export.setTitle(QCoreApplication.translate("write", u"\ub0b4\ubcf4\ub0b4\uae30", None))
         self.tools.setTitle(QCoreApplication.translate("write", u"\ub3c4\uad6c", None))
         self.info.setTitle(QCoreApplication.translate("write", u"\uc815\ubcf4", None))
     # retranslateUi
