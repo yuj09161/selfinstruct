@@ -49,9 +49,23 @@ class Write(QMainWindow,writeUI.Ui_write):
         def rm_dspace():
             for pte in self.pte:
                 pte.setPlainText(re.sub(' +',' ',pte.toPlainText()))
+        def do_connect_of_font(k):
+            ac=self.fontAction[k]
+            ac.triggered.connect(lambda: self.__set_font(ac.font_size_of_this))
+            if ac.font_size_of_this==9:
+                ac.setChecked(True)
         
         super().__init__()
+        
+        self.article_count=0
+        self.__font_size=9
         self.__oldpath=file
+        self.__font=None
+        
+        self.lbNo=[]
+        self.lbCount=[]
+        self.pte=[]
+        self.fontAction=[]
         
         if os.path.isfile(file):
             while True:
@@ -68,9 +82,6 @@ class Write(QMainWindow,writeUI.Ui_write):
             QMessageBox.critical(self,'File not exist','없는 파일')
             self.destroy()
             sys.exit(2)
-        
-        #self.article_count=len(data)-1
-        self.article_count=0
         
         self.setupUi(self)
         self.__loader(data)
@@ -105,6 +116,8 @@ class Write(QMainWindow,writeUI.Ui_write):
         self.acSaveCopy.triggered.connect(lambda: self.__save_as(False))
         self.acExport_Ent.triggered.connect(lambda: self.__export(True))
         self.acExport_NoEnt.triggered.connect(lambda: self.__export(False))
+        for k in range(len(self.fontAction)):
+            do_connect_of_font(k)
         self.acExit.triggered.connect(self.close)
         self.acDoubleSpace.triggered.connect(rm_dspace)
         #self.acConfig.triggered.connect(self.__config)
@@ -122,6 +135,15 @@ class Write(QMainWindow,writeUI.Ui_write):
             self.btnSave.setStyleSheet('color:red')
             tmp=self.pte[n].toPlainText()
             self.lbCount[n].setText(f'{len(tmp)}/{self.article[n][2]}{NL}({len(tmp.replace(NL,""))})')
+    
+    def __set_font(self,size=None):
+        if not size:
+            size=self.__font_size
+        else:
+            self.__font_size=size
+        font=QFont("Gulim",pointSize=size,weight=QFont.Light)
+        for k in range(self.article_count):
+            self.pte[k].setFont(font)
     
     def __auto_save(self,arg):
         if type(arg) is int:
@@ -237,7 +259,7 @@ class Write(QMainWindow,writeUI.Ui_write):
         if not 'history' in os.listdir():
             os.mkdir(CURRENT_PATH+'history')
         name=datetime.datetime.now().strftime('%m-%d_%H-%M-%S')
-        self.__save(dst=f'{CURRENT_PATH}history\\{name}.{self.__extension[0]}',do_history=False)
+        self.__save(dst=f'{CURRENT_PATH}history\\{name}.{self.__extension[1]}',do_history=False)
     
     def __save(self,*,dst=None,do_history=True,change_path=True,force=False):
         if not self.__saved or force:

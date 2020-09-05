@@ -6,6 +6,9 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
     QRadialGradient)
 from PySide2.QtWidgets import *
 
+FONT_SIZE_MIN=7
+FONT_SIZE_MAX=13
+
 class CustomScrollArea(QScrollArea):
     resized=Signal(QSize)
     def resizeEvent(self,event):
@@ -15,6 +18,10 @@ class CustomScrollArea(QScrollArea):
 class Ui_write(object):
     def setupUi(self, write):
         write.resize(800, 600)
+        
+        #action group
+        acGroupFont=QActionGroup(write)
+        acGroupFont.setExclusive(True)
         
         #action for menu
         self.acLoad = QAction(write)
@@ -31,13 +38,16 @@ class Ui_write(object):
         self.acExport_NoEnt.setObjectName(u"acExport_NoEnt")
         self.acExit = QAction(write)
         self.acExit.setObjectName(u"acExit")
+        
         self.acDoubleSpace = QAction(write)
         self.acDoubleSpace.setObjectName(u"acDoubleSpace")
         self.acConfig = QAction(write)
         self.acConfig.setObjectName(u"acConfig")
+        
         self.acInfo = QAction(write)
         self.acInfo.setObjectName(u"acInfo")
         
+        #set action enable
         self.acConfig.setEnabled(False)
         self.acInfo.setEnabled(False)
         
@@ -80,33 +90,7 @@ class Ui_write(object):
         self.lbTitleContent.setSizePolicy(self.sizePolicy_PF)
         self.lbTitleContent.setAlignment(Qt.AlignCenter)
         self.glMain.addWidget(self.lbTitleContent, 1, 0, 1, 2)
-
-        self.lbNo=[]
-        self.lbCount=[]
-        self.pte=[]
-        '''
-        for k in range(self.article_count):
-            lbNo = QLabel(self.scwMain)
-            self.sizePolicy_PF.setHeightForWidth(lbNo.sizePolicy().hasHeightForWidth())
-            lbNo.setSizePolicy(self.sizePolicy_PF)
-            lbNo.setAlignment(Qt.AlignCenter)
-            self.glMain.addWidget(lbNo, 2*k+2, 0, 1, 1)
-            self.lbNo.append(lbNo)
-
-            lbCount = QLabel(self.scwMain)
-            self.sizePolicy_FF.setHeightForWidth(lbCount.sizePolicy().hasHeightForWidth())
-            lbCount.setSizePolicy(self.sizePolicy_FF)
-            lbCount.setAlignment(Qt.AlignCenter)
-            lbCount.setMinimumHeight(32)
-            self.glMain.addWidget(lbCount, 2*k+2, 1, 1, 1)
-            self.lbCount.append(lbCount)
-
-            pte = QPlainTextEdit(self.scwMain)
-            self.sizePolicy_EP.setHeightForWidth(pte.sizePolicy().hasHeightForWidth())
-            pte.setSizePolicy(self.sizePolicy_EP)
-            self.glMain.addWidget(pte, 2*k+3, 0, 1, 2)
-            self.pte.append(pte)
-        '''
+        
         self.scMain.setWidget(self.scwMain)
         self.glCentral.addWidget(self.scMain, 0, 0, 1, 1)
     
@@ -149,31 +133,53 @@ class Ui_write(object):
         self.menubar.setGeometry(QRect(0, 0, 800, 26))
         self.save = QMenu(self.menubar)
         self.save.setObjectName(u"save")
-        self.export = QMenu(self.menubar)
-        self.export.setObjectName(u"export")
         self.tools = QMenu(self.menubar)
         self.tools.setObjectName(u"tools")
+        self.export = QMenu(self.menubar)
+        self.export.setObjectName(u"export")
+        self.fontSize = QMenu(self.menubar)
+        self.fontSize.setObjectName(u"fontSize")
         self.info = QMenu(self.menubar)
         self.info.setObjectName(u"info")
         write.setMenuBar(self.menubar)
-
-        self.menubar.addAction(self.save.menuAction())
-        self.menubar.addAction(self.tools.menuAction())
-        self.menubar.addAction(self.info.menuAction())
+        
+        self.export.addAction(self.acExport_Ent)
+        self.export.addAction(self.acExport_NoEnt)
+        
         self.save.addAction(self.acLoad)
         self.save.addAction(self.acSave)
         self.save.addSeparator()
         self.save.addAction(self.acSaveAs)
         self.save.addAction(self.acSaveCopy)
-        self.export.addAction(self.acExport_Ent)
-        self.export.addAction(self.acExport_NoEnt)
         self.save.addAction(self.export.menuAction())
         self.save.addSeparator()
         self.save.addAction(self.acExit)
+        
+        def mkaction(k):
+            fontAction = QAction(write)
+            fontAction.setObjectName(u"fontAction")
+            self.fontSize.addAction(fontAction)
+            fontAction.setActionGroup(acGroupFont)
+            fontAction.setCheckable(True)
+            fontAction.setText(
+                QCoreApplication.translate("write",str(k) if not k==9 else f'{k} (기본값)',None)
+            )
+            fontAction.font_size_of_this=k
+            self.fontAction.append(fontAction)
+        
+        for k in range(FONT_SIZE_MIN,FONT_SIZE_MAX+1):
+            mkaction(k)
+        
         self.tools.addAction(self.acDoubleSpace)
+        self.tools.addAction(self.fontSize.menuAction())
         self.save.addSeparator()
         self.tools.addAction(self.acConfig)
+        
         self.info.addAction(self.acInfo)
+
+        self.menubar.addAction(self.save.menuAction())
+        self.menubar.addAction(self.tools.menuAction())
+        self.menubar.addAction(self.info.menuAction())
 
         self.retranslateUi(write)
 
@@ -203,7 +209,8 @@ class Ui_write(object):
         self.acInfo.setText(QCoreApplication.translate("write", u"\uc815\ubcf4", None))
         
         self.save.setTitle(QCoreApplication.translate("write", u"\ud30c\uc77c", None))
-        self.export.setTitle(QCoreApplication.translate("write", u"\ub0b4\ubcf4\ub0b4\uae30", None))
         self.tools.setTitle(QCoreApplication.translate("write", u"\ub3c4\uad6c", None))
+        self.export.setTitle(QCoreApplication.translate("write", u"\ub0b4\ubcf4\ub0b4\uae30", None))
+        self.fontSize.setTitle(QCoreApplication.translate("write", u"글자 크기", None))
         self.info.setTitle(QCoreApplication.translate("write", u"\uc815\ubcf4", None))
     # retranslateUi
