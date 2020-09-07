@@ -6,8 +6,8 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
     QRadialGradient)
 from PySide2.QtWidgets import *
 
-FONT_SIZE_MIN=7
-FONT_SIZE_MAX=13
+FONT_MIN_SIZE     = 7
+FONT_MAX_SIZE     = 13
 
 class CustomScrollArea(QScrollArea):
     resized=Signal(QSize)
@@ -16,8 +16,8 @@ class CustomScrollArea(QScrollArea):
         self.resized.emit(event.size())
 
 class Ui_write(object):
-    def setupUi(self, write):
-        write.resize(800, 600)
+    def setupUi(self, write, font_default_size):
+        write.resize(1000, 750)
         
         #action group
         acGroupFont=QActionGroup(write)
@@ -49,7 +49,7 @@ class Ui_write(object):
         
         #set action enable
         self.acConfig.setEnabled(False)
-        self.acInfo.setEnabled(False)
+        #self.acInfo.setEnabled(False)
         
         self.centralwidget = QWidget(write)
         self.glCentral = QGridLayout(self.centralwidget)
@@ -162,12 +162,12 @@ class Ui_write(object):
             fontAction.setActionGroup(acGroupFont)
             fontAction.setCheckable(True)
             fontAction.setText(
-                QCoreApplication.translate("write",str(k) if not k==9 else f'{k} (기본값)',None)
+                QCoreApplication.translate("write",f'{k} (기본값)' if k==font_default_size else str(k),None)
             )
             fontAction.font_size_of_this=k
             self.fontAction.append(fontAction)
         
-        for k in range(FONT_SIZE_MIN,FONT_SIZE_MAX+1):
+        for k in range(FONT_MIN_SIZE,FONT_MAX_SIZE+1):
             mkaction(k)
         
         self.tools.addAction(self.acDoubleSpace)

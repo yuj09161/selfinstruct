@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PySide2.QtCore import Qt, QRect, QTimer
+from PySide2.QtCore import Qt, QRect, QTimer, QCoreApplication, QMetaObject
 from PySide2.QtGui import QFont, QIcon, QCloseEvent, QKeySequence
 from PySide2.QtWidgets import *
 import writeUI
@@ -11,10 +11,12 @@ HISTORY=True
 #end Config
 
 #constants
-NL='\n'
-CURRENT_PATH=os.path.dirname(os.path.abspath('__file__'))+'\\'
-DEFAULT_PATH=CURRENT_PATH+'last.selfinstruct'
-FILTER_EXPORT=('텍스트 파일 (*.txt)','Excel 호환 (*.tsv)')
+NL                = '\n'
+FONT_DEFAULT_SIZE = 10
+CURRENT_PATH      = os.path.dirname(os.path.abspath('__file__'))+'\\'
+PROGRAM_PATH      = os.path.dirname(os.path.abspath(sys.argv[0]))+'\\'
+DEFAULT_PATH      = CURRENT_PATH+'last.selfinstruct'
+FILTER_EXPORT     = ('텍스트 파일 (*.txt)','Excel 호환 (*.tsv)')
 
 LOGO='''
 writed with:
@@ -35,11 +37,48 @@ def load_data(path):
         res=json.load(file)
     return res
 
-
 def save_data(data,path):
     with open(path,'w',encoding='utf-8') as file:
         json.dump(data,file,indent=4,ensure_ascii=False)
 
+
+class Info(QMainWindow):
+    def __init__(self,info_text):
+        super().__init__()
+        self.setupUI()
+        
+        self.pteInfo.setPlainText(info_text)
+        self.btnExit.clicked.connect(self.hide)
+    
+    def setupUI(self):
+        if not self.objectName():
+            self.setObjectName(u"info")
+        self.setFixedSize(400, 300)
+        
+        self.centralwidget = QWidget(self)
+        self.centralwidget.setObjectName(u"centralwidget")
+        
+        self.glCentral = QGridLayout(self.centralwidget)
+        self.glCentral.setObjectName(u"glCentral")
+        
+        self.pteInfo = QPlainTextEdit(self.centralwidget)
+        self.pteInfo.setObjectName(u"pteInfo")
+        self.pteInfo.setReadOnly(True)
+        self.glCentral.addWidget(self.pteInfo, 0, 0, 1, 1)
+
+        self.btnExit = QPushButton(self.centralwidget)
+        self.btnExit.setObjectName(u"btnExit")
+        self.glCentral.addWidget(self.btnExit, 1, 0, 1, 1, Qt.AlignRight)
+
+        self.setCentralWidget(self.centralwidget)
+
+        self.retranslateUi()
+
+        QMetaObject.connectSlotsByName(self)
+
+    def retranslateUi(self):
+        self.setWindowTitle(QCoreApplication.translate("info", u"\uc815\ubcf4", None))
+        self.btnExit.setText(QCoreApplication.translate("info", u"\ub2eb\uae30", None))
 
 
 class Write(QMainWindow,writeUI.Ui_write):
@@ -52,20 +91,23 @@ class Write(QMainWindow,writeUI.Ui_write):
         def do_connect_of_font(k):
             ac=self.fontAction[k]
             ac.triggered.connect(lambda: self.__set_font(ac.font_size_of_this))
-            if ac.font_size_of_this==9:
+            if ac.font_size_of_this==FONT_DEFAULT_SIZE:
                 ac.setChecked(True)
+                self.__set_font(FONT_DEFAULT_SIZE)
         
         super().__init__()
         
-        self.article_count=0
-        self.__font_size=9
-        self.__oldpath=file
-        self.__font=None
+        self.article_count = 0
+        self.__font_size   = 9
         
-        self.lbNo=[]
-        self.lbCount=[]
-        self.pte=[]
-        self.fontAction=[]
+        self.__oldpath   = file
+        self.__font      = None
+        self.__info_win = None
+        
+        self.lbNo       = []
+        self.lbCount    = []
+        self.pte        = []
+        self.fontAction = []
         
         if os.path.isfile(file):
             while True:
@@ -83,7 +125,7 @@ class Write(QMainWindow,writeUI.Ui_write):
             self.destroy()
             sys.exit(2)
         
-        self.setupUi(self)
+        self.setupUi(self,FONT_DEFAULT_SIZE)
         self.__loader(data)
         
         self.__tmr=QTimer()
@@ -94,8 +136,6 @@ class Write(QMainWindow,writeUI.Ui_write):
         
         self.__saved=True
         self.spTime.setEnabled(self.chkAutoSave.isChecked())
-        
-        self.show()
         
         #register shortcuts
         QShortcut(QKeySequence.fromString('Ctrl+S'),self).activated.connect(self.__save)
@@ -121,9 +161,11 @@ class Write(QMainWindow,writeUI.Ui_write):
         self.acExit.triggered.connect(self.close)
         self.acDoubleSpace.triggered.connect(rm_dspace)
         #self.acConfig.triggered.connect(self.__config)
-        #self.acInfo.triggered.connect(self.__info)
+        self.acInfo.triggered.connect(self.__info)
 
         self.scMain.resized.connect(resize) #adjust length at resize
+        
+        self.show()
     
     def __count(self,n=-1):
         if n<0:
@@ -314,10 +356,19 @@ class Write(QMainWindow,writeUI.Ui_write):
                     if include_ent:
                         content=self.pte[k].toPlainText()
                     else:
-                        content=self.pte[k].toPlainText().replace('\n','')
+                        content=self.pte[k].toPlainText().replace('\n',' ')
                     file.write(f'#####{self.article[k][0]} / 글자수: {len(content)}/{self.article[k][2]}#####'+lnsep)
                     file.write(content+lnsep)
                 file.write(LOGO)
+    
+    def __info(self):
+        if not self.__info_win:
+            if os.path.isfile(PROGRAM_PATH+'LICENSE'):
+                with open(PROGRAM_PATH+'LICENSE','r',encoding='utf-8') as file:
+                    self.__info_win=Info(''.join(file.readlines()))
+            else:
+                self.__info_win=Info('License File is Missed')
+        self.__info_win.show()
     
     def closeEvent(self,event):
         if self.__saved:
