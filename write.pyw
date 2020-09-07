@@ -47,7 +47,7 @@ class Info(QMainWindow):
         super().__init__()
         self.setupUI()
         
-        self.pteInfo.setPlainText(info_text)
+        self.pteInfo.setPlainText(info_text.replace('\n',' ').replace('  ','\n\n'))
         self.btnExit.clicked.connect(self.hide)
     
     def setupUI(self):
@@ -365,7 +365,7 @@ class Write(QMainWindow,writeUI.Ui_write):
         if not self.__info_win:
             if os.path.isfile(PROGRAM_PATH+'LICENSE'):
                 with open(PROGRAM_PATH+'LICENSE','r',encoding='utf-8') as file:
-                    self.__info_win=Info(''.join(file.readlines()))
+                    self.__info_win=Info(file.read())
             else:
                 self.__info_win=Info('License File is Missed')
         self.__info_win.show()
