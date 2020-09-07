@@ -6,8 +6,8 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
     QRadialGradient)
 from PySide2.QtWidgets import *
 
-FONT_MIN_SIZE     = 7
-FONT_MAX_SIZE     = 13
+FONT_MIN_SIZE = 7
+FONT_MAX_SIZE = 13
 
 class CustomScrollArea(QScrollArea):
     resized=Signal(QSize)
@@ -44,12 +44,13 @@ class Ui_write(object):
         self.acConfig = QAction(write)
         self.acConfig.setObjectName(u"acConfig")
         
+        self.acNotice = QAction(write)
+        self.acNotice.setObjectName(u"acNotice")
         self.acInfo = QAction(write)
         self.acInfo.setObjectName(u"acInfo")
         
         #set action enable
         self.acConfig.setEnabled(False)
-        #self.acInfo.setEnabled(False)
         
         self.centralwidget = QWidget(write)
         self.glCentral = QGridLayout(self.centralwidget)
@@ -175,6 +176,7 @@ class Ui_write(object):
         self.save.addSeparator()
         self.tools.addAction(self.acConfig)
         
+        self.info.addAction(self.acNotice)
         self.info.addAction(self.acInfo)
 
         self.menubar.addAction(self.save.menuAction())
@@ -206,6 +208,7 @@ class Ui_write(object):
         self.acExit.setText(QCoreApplication.translate("write", u"\uc885\ub8cc", None))
         self.acDoubleSpace.setText(QCoreApplication.translate("write", u"\ub2e4\uc911 \uacf5\ubc31 \uc81c\uac70", None))
         self.acConfig.setText(QCoreApplication.translate("write", u"\uc124\uc815", None))
+        self.acNotice.setText(QCoreApplication.translate("write", u"오픈 소스 라이선스", None))
         self.acInfo.setText(QCoreApplication.translate("write", u"\uc815\ubcf4", None))
         
         self.save.setTitle(QCoreApplication.translate("write", u"\ud30c\uc77c", None))

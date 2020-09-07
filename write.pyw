@@ -98,11 +98,12 @@ class Write(QMainWindow,writeUI.Ui_write):
         super().__init__()
         
         self.article_count = 0
-        self.__font_size   = 9
+        self.__font_size   = FONT_DEFAULT_SIZE
         
-        self.__oldpath   = file
-        self.__font      = None
+        self.__oldpath  = file
+        self.__font     = None
         self.__info_win = None
+        self.__note_win = None
         
         self.lbNo       = []
         self.lbCount    = []
@@ -162,6 +163,7 @@ class Write(QMainWindow,writeUI.Ui_write):
         self.acDoubleSpace.triggered.connect(rm_dspace)
         #self.acConfig.triggered.connect(self.__config)
         self.acInfo.triggered.connect(self.__info)
+        self.acNotice.triggered.connect(self.__notice)
 
         self.scMain.resized.connect(resize) #adjust length at resize
         
@@ -369,6 +371,15 @@ class Write(QMainWindow,writeUI.Ui_write):
             else:
                 self.__info_win=Info('License File is Missed')
         self.__info_win.show()
+    
+    def __notice(self):
+        if not self.__note_win:
+            if os.path.isfile(PROGRAM_PATH+'NOTICE'):
+                with open(PROGRAM_PATH+'NOTICE','r',encoding='utf-8') as file:
+                    self.__note_win=Info(file.read())
+            else:
+                self.__note_win=Info('Notice File is Missed')
+        self.__note_win.show()
     
     def closeEvent(self,event):
         if self.__saved:
