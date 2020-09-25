@@ -7,26 +7,28 @@ import writeUI
 import os,sys,json,datetime,re,argparse
 
 #Config
-HISTORY=True
+HISTORY           = True
+DEFAULT_FONT_SIZE = 10
+ACCEPT_COUNT      = 10
+WARNING_LIMIT     = 200
 #end Config
 
 #constants
-NL                = '\n'
-FONT_DEFAULT_SIZE = 10
-CURRENT_PATH      = os.path.dirname(os.path.abspath('__file__'))+'\\'
-PROGRAM_PATH      = os.path.dirname(os.path.abspath(sys.argv[0]))+'\\'
-DEFAULT_PATH      = CURRENT_PATH+'last.selfinstruct'
-FILTER_EXPORT     = ('텍스트 파일 (*.txt)','Excel 호환 (*.tsv)')
+NL            = '\n'
+CURRENT_PATH  = os.path.dirname('./')+'\\'
+PROGRAM_PATH  = os.path.dirname(os.path.abspath(sys.argv[0]))+'\\'
+DEFAULT_PATH  = CURRENT_PATH+'last.selfinstruct'
+FILTER_EXPORT = ('텍스트 파일 (*.txt)','Excel 호환 (*.tsv)')
 
 LOGO='''
 writed with:
 ###############################
 
  H   H Y   Y   SSS   `s
- H   H  Y Y   S      self
- HHHHH   Y     SSS   자기소개서
- H   H   Y        S  instruct
- H   H   Y     SSS   helper
+ H   H  Y Y   S      
+ HHHHH   Y     SSS   
+ H   H   Y        S  
+ H   H   Y     SSS   
 
 ###############################
 '''
@@ -41,19 +43,24 @@ def save_data(data,path):
     with open(path,'w',encoding='utf-8') as file:
         json.dump(data,file,indent=4,ensure_ascii=False)
 
-
 class Info(QMainWindow):
-    def __init__(self,info_text):
-        super().__init__()
+    def __init__(self,parent,title,info_text,display_qtinfo=False):
+        self.__display_qtinfo=display_qtinfo
+        
+        super().__init__(parent)
         self.setupUI()
         
-        self.pteInfo.setPlainText(info_text.replace('\n',' ').replace('  ','\n\n'))
+        self.retranslateUi(title,info_text)
         self.btnExit.clicked.connect(self.hide)
+        
+        if self.__display_qtinfo:
+            self.btnQt.clicked.connect(lambda: QMessageBox.aboutQt(self))
     
     def setupUI(self):
         if not self.objectName():
             self.setObjectName(u"info")
         self.setFixedSize(400, 300)
+        self.setWindowFlags(self.windowFlags()^Qt.WindowMinMaxButtonsHint)
         
         self.centralwidget = QWidget(self)
         self.centralwidget.setObjectName(u"centralwidget")
@@ -64,21 +71,25 @@ class Info(QMainWindow):
         self.pteInfo = QPlainTextEdit(self.centralwidget)
         self.pteInfo.setObjectName(u"pteInfo")
         self.pteInfo.setReadOnly(True)
-        self.glCentral.addWidget(self.pteInfo, 0, 0, 1, 1)
+        self.glCentral.addWidget(self.pteInfo, 0, 0, 1, 2)
+
+        if self.__display_qtinfo:
+            self.btnQt = QPushButton(self.centralwidget)
+            self.btnQt.setObjectName(u"btnQt")
+            self.glCentral.addWidget(self.btnQt, 1, 0, 1, 1, Qt.AlignLeft)
 
         self.btnExit = QPushButton(self.centralwidget)
         self.btnExit.setObjectName(u"btnExit")
-        self.glCentral.addWidget(self.btnExit, 1, 0, 1, 1, Qt.AlignRight)
+        self.glCentral.addWidget(self.btnExit, 1, 1, 1, 1, Qt.AlignRight)
 
         self.setCentralWidget(self.centralwidget)
-
-        self.retranslateUi()
-
-        QMetaObject.connectSlotsByName(self)
-
-    def retranslateUi(self):
-        self.setWindowTitle(QCoreApplication.translate("info", u"\uc815\ubcf4", None))
+    
+    def retranslateUi(self,title,info_text):
+        self.setWindowTitle(QCoreApplication.translate("info", title, None))
+        self.pteInfo.setPlainText(re.sub('\n +','\n',re.sub('\n{2,} *','\n\n',info_text)))
         self.btnExit.setText(QCoreApplication.translate("info", u"\ub2eb\uae30", None))
+        if self.__display_qtinfo:
+            self.btnQt.setText(QCoreApplication.translate("info", u"About Qt", None))
 
 
 class Write(QMainWindow,writeUI.Ui_write):
@@ -88,17 +99,18 @@ class Write(QMainWindow,writeUI.Ui_write):
         def rm_dspace():
             for pte in self.pte:
                 pte.setPlainText(re.sub(' +',' ',pte.toPlainText()))
+                pte.setPlainText(re.sub('\n+','\n',pte.toPlainText()))
         def do_connect_of_font(k):
             ac=self.fontAction[k]
             ac.triggered.connect(lambda: self.__set_font(ac.font_size_of_this))
-            if ac.font_size_of_this==FONT_DEFAULT_SIZE:
+            if ac.font_size_of_this==DEFAULT_FONT_SIZE:
                 ac.setChecked(True)
-                self.__set_font(FONT_DEFAULT_SIZE)
+                self.__set_font(DEFAULT_FONT_SIZE)
         
         super().__init__()
         
         self.article_count = 0
-        self.__font_size   = FONT_DEFAULT_SIZE
+        self.__font_size   = DEFAULT_FONT_SIZE
         
         self.__oldpath  = file
         self.__font     = None
@@ -126,11 +138,11 @@ class Write(QMainWindow,writeUI.Ui_write):
             self.destroy()
             sys.exit(2)
         
-        self.setupUi(self,FONT_DEFAULT_SIZE)
+        self.setupUi(self,DEFAULT_FONT_SIZE)
         self.__loader(data)
         
         self.__tmr=QTimer()
-        self.__tmr.timeout.connect(lambda: self.__save(do_history=False))
+        self.__tmr.timeout.connect(lambda: self.__save(dst=self.__oldpath+'.bak',do_history=False))
         if self.chkAutoSave.isChecked():
             self.__tmr.setInterval(self.spTime.value()*1000*60)
             self.__tmr.start()
@@ -173,12 +185,30 @@ class Write(QMainWindow,writeUI.Ui_write):
         if n<0:
             for k in range(self.article_count):
                 tmp=self.pte[k].toPlainText()
-                self.lbCount[k].setText(f'{len(tmp)}/{self.article[k][2]}{NL}({len(tmp.replace(NL,""))})')  
+                length=len(tmp)
+                self.lbCount[k].setText(f'{length}/{self.article[k][2]}{NL}({len(tmp.encode("utf-8"))})')
+                if length<(self.article[k][2]-ACCEPT_COUNT):
+                    self.lbCount[k].setStyleSheet('color:blue')
+                elif length<=self.article[k][2]:
+                    self.lbCount[k].setStyleSheet('color:green')
+                elif length<(self.article[k][2]+WARNING_LIMIT):
+                    self.lbCount[k].setStyleSheet('color:#FF7F00')
+                else:
+                    self.lbCount[k].setStyleSheet('color:red')
         else:
             self.__saved=False
             self.btnSave.setStyleSheet('color:red')
             tmp=self.pte[n].toPlainText()
-            self.lbCount[n].setText(f'{len(tmp)}/{self.article[n][2]}{NL}({len(tmp.replace(NL,""))})')
+            length=len(tmp)
+            self.lbCount[n].setText(f'{length}/{self.article[n][2]}{NL}({len(tmp.encode("utf-8"))})')
+            if length<(self.article[n][2]-ACCEPT_COUNT):
+                self.lbCount[n].setStyleSheet('color:blue')
+            elif length<=self.article[n][2]:
+                self.lbCount[n].setStyleSheet('color:green')
+            elif length<(self.article[n][2]+WARNING_LIMIT):
+                self.lbCount[n].setStyleSheet('color:#FF7F00')
+            else:
+                self.lbCount[n].setStyleSheet('color:red')
     
     def __set_font(self,size=None):
         if not size:
@@ -188,23 +218,6 @@ class Write(QMainWindow,writeUI.Ui_write):
         font=QFont("Gulim",pointSize=size,weight=QFont.Light)
         for k in range(self.article_count):
             self.pte[k].setFont(font)
-    
-    def __auto_save(self,arg):
-        if type(arg) is int:
-            self.__tmr.stop()
-            self.__tmr.setInterval(arg*1000*60)
-            self.__tmr.start()
-            self.__save(do_history=False)
-        elif type(arg) is bool:
-            self.spTime.setEnabled(arg)
-            if arg:
-                self.__tmr.setInterval(self.spTime.value()*1000*60)
-                self.__tmr.start()
-            else:
-                self.__tmr.stop()
-            self.__save(do_history=False)
-        else:
-            raise ValueError
     
     def __load_as(self):
         path,_=QFileDialog.getOpenFileName(self,'불러오기',CURRENT_PATH,';;'.join(self.__file_filter),self.__file_filter[0])
@@ -230,8 +243,17 @@ class Write(QMainWindow,writeUI.Ui_write):
         self.article=[]
         oldcnt=self.article_count
         self.article_count=len(data)-1
-        self.__article_height_multi=data[-1][2]
-        self.__extension=data[-1][3:5]
+        
+        option_count=len(data[-1])
+        if option_count>4:
+            self.__article_height_multi=data[-1][2]
+            self.__extension=data[-1][3:5]
+        elif option_count>2:
+            self.__article_height_multi=data[-1][2]
+            self.__extension=('자기소개서','selfinstruct')
+        else:
+            self.__article_height_multi=1
+            self.__extension=('자기소개서','selfinstruct')
         
         if self.article_count>oldcnt: #if needs more article(s)
             for k in range(oldcnt,self.article_count): #generate widget(s)
@@ -270,6 +292,10 @@ class Write(QMainWindow,writeUI.Ui_write):
                 del self.pte[k]
         
         for k in range(self.article_count):
+            try:
+                self.pte[k].textChanged.disconnect()
+            except:
+                pass
             #get article
             self.article.append(data[k][:3])
             #set text of title QLabel
@@ -280,67 +306,102 @@ class Write(QMainWindow,writeUI.Ui_write):
             #set text of QPlainTextEdit
             self.pte[k].setPlainText(data[k][3])
             do_connect(k)
+        
         #set autosave state
         self.chkAutoSave.setChecked(data[-1][0])
         self.spTime.setValue(data[-1][1])
+        
         #set window title&file extension
         self.setWindowTitle(self.__extension[0]+' \uc791\uc131 \ubcf4\uc870')
         self.__file_filter=(f'{self.__extension[0]} 파일 (*.{self.__extension[1]})','모든 파일 (*.*)')
+        
         #adjust height of scroll area widget&Scroll up
         app.processEvents()
         self.scwMain.setGeometry(QRect(0, 0, 755, self.scwMain.sizeHint().height()))
         v_scbar=self.scMain.verticalScrollBar()
         v_scbar.setValue(v_scbar.minimum())
-        #count words
-        self.__count()
+        
+        self.__count() #count words
+        self.scwMain.resize(self.width(),self.scwMain.height()) #resize main scroll area
+    
+    def __auto_save(self,arg):
+        if type(arg) is int:
+            self.__tmr.stop()
+            self.__tmr.setInterval(arg*1000*60)
+            self.__tmr.start()
+            self.__save(do_history=False)
+        elif type(arg) is bool:
+            self.spTime.setEnabled(arg)
+            if arg:
+                self.__tmr.setInterval(self.spTime.value()*1000*60)
+                self.__tmr.start()
+            else:
+                self.__tmr.stop()
+            self.__save(dst=self.__oldpath+'.bak',do_history=False)
+        else:
+            raise ValueError
     
     def __save_as(self,change_path=True):
         path,_=QFileDialog.getSaveFileName(self,'저장',CURRENT_PATH,';;'.join(self.__file_filter[:-1]),self.__file_filter[0])
         if path:
-            self.__save(dst=path,change_path=change_path,force=True)
+            self.__save(path)
     
     def __save_history(self):
         if not 'history' in os.listdir():
             os.mkdir(CURRENT_PATH+'history')
         name=datetime.datetime.now().strftime('%m-%d_%H-%M-%S')
-        self.__save(dst=f'{CURRENT_PATH}history\\{name}.{self.__extension[1]}',do_history=False)
+        self.__save(f'{CURRENT_PATH}history\\{name}.{self.__extension[1]}')
     
-    def __save(self,*,dst=None,do_history=True,change_path=True,force=False):
+    def __save(self,*,dst=None,force=False):
         if not self.__saved or force:
-            if not dst:
-                dst=self.__oldpath
-            #pack data
-            res=[]
-            for k in range(self.article_count):
-                res.append((*self.article[k],self.pte[k].toPlainText()))
-            res.append(
-                (
-                    self.chkAutoSave.isChecked(),
-                    self.spTime.value(),
-                    self.__article_height_multi,
-                    *self.__extension
-                )
+            run     = True
+            run_his = True
+            self.__saver(dst)
+            if HISTORY:
+                self.__save_history()
+            self.btnSave.setStyleSheet('')
+            self.__saved=True
+            self.__oldpath=dst
+    
+    def __saver(self,dst):
+        #determine path
+        if not dst:
+            dst=self.__oldpath
+        print(dst)
+        
+        #pack data
+        data=[]
+        for k in range(self.article_count):
+            data.append((*self.article[k],self.pte[k].toPlainText()))
+        data.append(
+            (
+                self.chkAutoSave.isChecked(),
+                self.spTime.value(),
+                self.__article_height_multi,
+                *self.__extension
             )
+        )
+        
+        while True:
             #write data
             try:
-                save_data(res,dst)
+                save_data(data,dst)
             except json.JSONDecodeError as e:
-                reply=QMessageBox.warning(self,'Save Error','데이터 쓰기 오류 발생\nTraceBack:\n%s\n재시도?' %str(e),QMessageBox.Retry|QMessageBox.Cancel)
+                reply=QMessageBox.warning(
+                    self,
+                    'Save Error',
+                    f'데이터 쓰기 오류 발생\nTraceBack:\n{e}\n재시도?',
+                    QMessageBox.Retry|QMessageBox.Cancel
+                )
                 if reply==QMessageBox.Retry:
-                    self.__save(dst=dst,do_history=do_history,change_path=change_path,force=force)
-            else:
-                if HISTORY:
-                    if do_history:
-                        self.__save_history()
-                        self.btnSave.setStyleSheet('')
-                        self.__saved=True
-                    else:
-                        self.btnSave.setStyleSheet('color:blue')
+                    #self.__saver(self,dst,autosav_off)
+                    continue
                 else:
-                    self.btnSave.setStyleSheet('')
-                    self.__saved=True
-                if change_path:
-                    self.__oldpath=dst
+                    #return False
+                    break
+            else:
+                #return True
+                break
     
     def __export(self,include_ent):
         path,ext=QFileDialog.getSaveFileName(self,'저장',CURRENT_PATH,';;'.join(FILTER_EXPORT),FILTER_EXPORT[0])
@@ -363,23 +424,23 @@ class Write(QMainWindow,writeUI.Ui_write):
                     file.write(content+lnsep)
                 file.write(LOGO)
     
-    def __info(self):
-        if not self.__info_win:
-            if os.path.isfile(PROGRAM_PATH+'LICENSE'):
-                with open(PROGRAM_PATH+'LICENSE','r',encoding='utf-8') as file:
-                    self.__info_win=Info(file.read())
-            else:
-                self.__info_win=Info('License File is Missed')
-        self.__info_win.show()
-    
     def __notice(self):
         if not self.__note_win:
             if os.path.isfile(PROGRAM_PATH+'NOTICE'):
                 with open(PROGRAM_PATH+'NOTICE','r',encoding='utf-8') as file:
-                    self.__note_win=Info(file.read())
+                    self.__note_win=Info(self,'오픈 소스 라이선스',file.read(),True)
             else:
-                self.__note_win=Info('Notice File is Missed')
+                self.__note_win=Info(self,'오픈 소스 라이선스','Notice File is Missed',True)
         self.__note_win.show()
+    
+    def __info(self):
+        if not self.__info_win:
+            if os.path.isfile(PROGRAM_PATH+'LICENSE'):
+                with open(PROGRAM_PATH+'LICENSE','r',encoding='utf-8') as file:
+                    self.__info_win=Info(self,'정보',file.read())
+            else:
+                self.__info_win=Info(self,'정보','License File is Missed')
+        self.__info_win.show()
     
     def closeEvent(self,event):
         if self.__saved:

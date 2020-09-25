@@ -6,8 +6,8 @@ from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
     QRadialGradient)
 from PySide2.QtWidgets import *
 
-FONT_MIN_SIZE = 7
-FONT_MAX_SIZE = 13
+MIN_FONT_SIZE = 7
+MAX_FONT_SIZE = 13
 
 class CustomScrollArea(QScrollArea):
     resized=Signal(QSize)
@@ -168,7 +168,7 @@ class Ui_write(object):
             fontAction.font_size_of_this=k
             self.fontAction.append(fontAction)
         
-        for k in range(FONT_MIN_SIZE,FONT_MAX_SIZE+1):
+        for k in range(MIN_FONT_SIZE,MAX_FONT_SIZE+1):
             mkaction(k)
         
         self.tools.addAction(self.acDoubleSpace)
