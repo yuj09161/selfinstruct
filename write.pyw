@@ -142,7 +142,7 @@ class Write(QMainWindow,writeUI.Ui_write):
         self.__loader(data)
         
         self.__tmr=QTimer()
-        self.__tmr.timeout.connect(lambda: self.__save(dst=self.__oldpath+'.bak',do_history=False))
+        self.__tmr.timeout.connect(self.__save_backup)
         if self.chkAutoSave.isChecked():
             self.__tmr.setInterval(self.spTime.value()*1000*60)
             self.__tmr.start()
@@ -329,7 +329,8 @@ class Write(QMainWindow,writeUI.Ui_write):
             self.__tmr.stop()
             self.__tmr.setInterval(arg*1000*60)
             self.__tmr.start()
-            self.__save(do_history=False)
+            #self.__save(do_history=False)
+            self.__save_backup()
         elif type(arg) is bool:
             self.spTime.setEnabled(arg)
             if arg:
@@ -337,7 +338,8 @@ class Write(QMainWindow,writeUI.Ui_write):
                 self.__tmr.start()
             else:
                 self.__tmr.stop()
-            self.__save(dst=self.__oldpath+'.bak',do_history=False)
+            #self.__save(dst=self.__oldpath+'.bak',do_history=False)
+            self.__save_backup()
         else:
             raise ValueError
     
@@ -346,13 +348,20 @@ class Write(QMainWindow,writeUI.Ui_write):
         if path:
             self.__save(path)
     
+    def __save_backup(self):
+        self.__saver(self.__oldpath+'.bak')
+        self.btnSave.setStyleSheet('color:blue')
+    
     def __save_history(self):
         if not 'history' in os.listdir():
             os.mkdir(CURRENT_PATH+'history')
         name=datetime.datetime.now().strftime('%m-%d_%H-%M-%S')
-        self.__save(f'{CURRENT_PATH}history\\{name}.{self.__extension[1]}')
+        self.__saver(f'{CURRENT_PATH}history\\{name}.{self.__extension[1]}')
     
     def __save(self,*,dst=None,force=False):
+        #determine path
+        if not dst:
+            dst=self.__oldpath
         if not self.__saved or force:
             run     = True
             run_his = True
@@ -364,11 +373,7 @@ class Write(QMainWindow,writeUI.Ui_write):
             self.__oldpath=dst
     
     def __saver(self,dst):
-        #determine path
-        if not dst:
-            dst=self.__oldpath
         print(dst)
-        
         #pack data
         data=[]
         for k in range(self.article_count):
@@ -394,13 +399,10 @@ class Write(QMainWindow,writeUI.Ui_write):
                     QMessageBox.Retry|QMessageBox.Cancel
                 )
                 if reply==QMessageBox.Retry:
-                    #self.__saver(self,dst,autosav_off)
                     continue
                 else:
-                    #return False
                     break
             else:
-                #return True
                 break
     
     def __export(self,include_ent):
